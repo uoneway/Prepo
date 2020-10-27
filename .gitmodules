@@ -1,3 +1,6 @@
 [submodule "submodules/Top2Vec"]
 	path = submodules/Top2Vec
 	url = https://github.com/uoneway/Top2Vec.git
+[submodule "submodules/newspaper"]
+	path = submodules/newspaper
+	url = https://github.com/uoneway/newspaper.git
