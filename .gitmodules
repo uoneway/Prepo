@@ -1,0 +1,3 @@
+[submodule "submodules/Top2Vec"]
+	path = submodules/Top2Vec
+	url = https://github.com/uoneway/Top2Vec.git
