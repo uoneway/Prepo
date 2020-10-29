@@ -16,7 +16,7 @@ logger.addHandler(stream_handler)
 def scraper(urls, idx=None):    
     docs_info = []
     docs_idx = []
-    error_urls_by_types = {'parse_error':[], 'empty_contents':[], 'none_contents':[]}
+    error_urls_by_types = {'parse_error':[], 'empty_contents':[]}
 
     
     if idx is not None:
@@ -43,7 +43,7 @@ def scraper(urls, idx=None):
                 'publish_date': article.publish_date,
                 'contents': article.text,
                 'url': url,
-                'scrap_at': datetime.now(),
+                'crawl_at': datetime.now(),
                 'is_news': article.is_valid_url(),
     #             'top_image': article.top_image,
     #             'movies': article.movies
@@ -57,10 +57,6 @@ def scraper(urls, idx=None):
         if doc_info['title'] == '' or doc_info['contents'] == '':
             logger.error("title/contents is empty, %s", str(url))
             error_urls_by_types['empty_contents'].append(url)
-            continue
-        elif doc_info['title'] == None or doc_info['contents'] == None:
-            logger.error("title/contents is None, %s", str(url))
-            error_urls_by_types['none_contents'].append(url)
             continue
         else:
             #print(doc_info['title'], type(doc_info['title']))
