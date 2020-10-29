@@ -40,8 +40,12 @@ def preprocessing(text, tokenizer=korean_tokenizer):
         text_p = tokenizer(text_p)
         text_p = ' '.join(text_p)
     
+    # print("-------------------------text_p---------------------------------")
+    # print(text_p)
     text_ps = summarizer(text_p)
-    
+    # print("-------------------------text_ps---------------------------------")
+    # print(text_ps)
+    # print()
     return text_ps
 
 
