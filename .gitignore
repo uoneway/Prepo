@@ -1,3 +1,4 @@
 datasets
 .vscode
 test/.ipynb_checkpoints/
+*/__pycache__/*
