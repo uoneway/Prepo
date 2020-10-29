@@ -16,12 +16,13 @@ logger.addHandler(stream_handler)
 def scraper(urls, idx=None):    
     docs_info = []
     docs_idx = []
-#     urls_cannot_parse = []
+    error_urls_by_types = {'parse_error':[], 'empty_contents':[], 'none_contents':[]}
+
     
     if idx is not None:
         assert len(idx) == len(urls), "The length of urls and idx should be same."
     doc_info = {}
-    urls = set(urls)
+    #urls = set(urls)  # 이거 실행하면 순서가 바뀌어버림..
     
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
     config = newspaper.Config()
@@ -50,22 +51,26 @@ def scraper(urls, idx=None):
 
         except:
             logger.error(f"Cannot parse, {url}")
-            #urls_cannot_parse.append(url)
+            error_urls_by_types['parse_error'].append(url)
             continue
             
         if doc_info['title'] == '' or doc_info['contents'] == '':
-            logger.error("Error: failed to get title/contents data for url %s", str(url))
-            #urls_cannot_parse.append(url)
+            logger.error("title/contents is empty, %s", str(url))
+            error_urls_by_types['empty_contents'].append(url)
+            continue
+        elif doc_info['title'] == None or doc_info['contents'] == None:
+            logger.error("title/contents is None, %s", str(url))
+            error_urls_by_types['none_contents'].append(url)
             continue
         else:
-            docs_info.append(doc_info)
-        
-        if idx is not None:
-            docs_idx.append(idx[i])
+            #print(doc_info['title'], type(doc_info['title']))
+            docs_info.append(doc_info)      
+            if idx is not None:
+                docs_idx.append(idx[i])
 
-    print(f"Complete scrape {len(docs_info)} among {len(urls)}")
+    logger.info(f"Complete scrape {len(docs_info)} among {len(urls)}")
         
-    return docs_info, docs_idx
+    return docs_info, docs_idx, error_urls_by_types
 
 
 def url_extractor(text):
