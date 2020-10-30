@@ -17,7 +17,7 @@ sys.path.insert(1, PROJECT_DIR + '/submodules')
 # from submodules.Top2Vec.top2vec import Top2Vec
 import utils
 from scrap import scraper
-from preprocess import preprocessing 
+from preprocess import preprocessing, summarizer
 from top2vec import Top2Vec
 
 
@@ -27,11 +27,11 @@ MODEL_DIR = PROJECT_DIR + '/models/'
 IMAGES_DIR = PROJECT_DIR + '/images/'
 TEST_DIR = PROJECT_DIR + '/test/'
 
-# ## logger
-# logger = logging.getLogger(__name__)
-# logging.basicConfig(level=logging.info)
-# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# # 콘솔로 출력
+## logger
+logger = logging.getLogger()
+logging.basicConfig(level=logging.debug)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# 콘솔로 출력
 # stream_handler = logging.StreamHandler()
 # stream_handler.setFormatter(formatter)
 # logger.addHandler(stream_handler)
@@ -43,7 +43,7 @@ user_data_dir = TEST_DIR + "data/choi_urls/"
 user_docs_info_data_filename = 'docs_info_df.pkl'
 user_urls_data_filename = 'choi_time_url_df.pkl'
 
-DO_SCRAP = True
+DO_SCRAP = False
 if Path(user_data_dir + user_docs_info_data_filename).exists() and not DO_SCRAP:
     docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
 
@@ -73,6 +73,7 @@ print(docs_info_df)
 ## 전처리 적용
 # 제목과 contents 부분을 전처리 후 붙여주기
 docs_info_prep_df = docs_info_df.copy()
-docs_info_prep_df['contents_prep'] = docs_info_prep_df['title'].apply(preprocessing) + \
-                                    ". " + docs_info_prep_df['contents'].apply(preprocessing)
+docs_info_prep_df['contents_prep'] = docs_info_prep_df['title'] + ". " + docs_info_prep_df['contents']
+docs_info_prep_df['contents_prep'] = docs_info_prep_df['contents_prep'].apply(preprocessing)
+docs_info_prep_df['contents_prep'] = docs_info_prep_df['contents_prep'].apply(summarizer)
 utils.save_obj(user_data_dir, 'docs_info_prep_df.pkl', docs_info_prep_df)
