@@ -43,7 +43,7 @@ user_data_dir = TEST_DIR + "data/choi_urls/"
 user_docs_info_data_filename = 'docs_info_df.pkl'
 user_urls_data_filename = 'choi_time_url_df.pkl'
 
-DO_SCRAP = False
+DO_SCRAP = True
 if Path(user_data_dir + user_docs_info_data_filename).exists() and not DO_SCRAP:
     docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
 
@@ -62,8 +62,8 @@ else:
     # print(docs_info_df.isnull().sum())
     # print(error_urls_by_types)
 
-    utils.save_obj(user_data_dir, user_docs_info_data_filename, docs_info_df)
-    utils.save_obj(user_data_dir, "error_urls_by_types.txt", error_urls_by_types)
+    # utils.save_obj(user_data_dir, user_docs_info_data_filename, docs_info_df)
+    # utils.save_obj(user_data_dir, "error_urls_by_types.txt", error_urls_by_types)
 
 
 #logger.info(docs_info_df)
