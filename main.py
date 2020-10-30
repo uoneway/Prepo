@@ -6,15 +6,20 @@ import pandas as pd
 import logging
 
 PROJECT_DIR = os.path.abspath(os.path.dirname("__file__")) #"/home/lab13/RunToLearn/plink/"
-# sys.path.insert(0, PROJECT_DIR + '/modules')
-# sys.path.insert(1, PROJECT_DIR + '/submodules')
+sys.path.insert(0, PROJECT_DIR + '/src')
+sys.path.insert(1, PROJECT_DIR + '/submodules/Top2Vec')
+sys.path.insert(1, PROJECT_DIR + '/submodules')
 #print(sys.path)
 
-from modules import utils
-from modules.scrap import scraper
-from modules.preprocess import preprocessing 
+# from modules import utils
+# from modules.scrap import scraper
+# from modules.preprocess import preprocessing 
+# from submodules.Top2Vec.top2vec import Top2Vec
+import utils
+from scrap import scraper
+from preprocess import preprocessing 
+from top2vec import Top2Vec
 
-from submodules.Top2Vec.top2vec import Top2Vec
 
 
 DATA_DIR = PROJECT_DIR + '/datasets/'
@@ -38,7 +43,7 @@ user_data_dir = TEST_DIR + "data/choi_urls/"
 user_docs_info_data_filename = 'docs_info_df.pkl'
 user_urls_data_filename = 'choi_time_url_df.pkl'
 
-DO_SCRAP = False
+DO_SCRAP = True
 if Path(user_data_dir + user_docs_info_data_filename).exists() and not DO_SCRAP:
     docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
 
@@ -51,6 +56,7 @@ else:
 
     docs_info_df = docs_info_df.join(input_df['time'], how='left')
     docs_info_df.rename(columns = {"time": "clip_at"}, inplace=True)
+    docs_info_df = docs_info_df.sort_values(by=['clip_at'], axis=0).reset_index(drop=True)  # 정렬 후 reset index
 
     # print(docs_info_df)
     # print(docs_info_df.isnull().sum())
@@ -66,5 +72,7 @@ print(docs_info_df)
 
 ## 전처리 적용
 # 제목과 contents 부분을 전처리 후 붙여주기
-docs_info_df['contents_prep'] = docs_info_df['title'].apply(preprocessing) + ". " + docs_info_df['contents'].apply(preprocessing)
-
+docs_info_prep_df = docs_info_df.copy()
+docs_info_prep_df['contents_prep'] = docs_info_prep_df['title'].apply(preprocessing) + \
+                                    ". " + docs_info_prep_df['contents'].apply(preprocessing)
+utils.save_obj(user_data_dir, 'docs_info_prep_df.pkl', docs_info_prep_df)
