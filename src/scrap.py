@@ -1,4 +1,4 @@
-from newspaper import newspaper  # from newspaper import Article, Config # https://newspaper.readthedocs.io/en/latest/   
+from submodules.newspaper import newspaper  # from newspaper import Article, Config # https://newspaper.readthedocs.io/en/latest/   
 from datetime import datetime
 from urllib.parse import urljoin, urlparse, parse_qs
 import re
