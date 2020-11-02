@@ -45,10 +45,9 @@ user_docs_info_data_filename = 'docs_info_df.pkl'
 user_urls_data_filename = 'choi_time_url_df.pkl'
 
 DO_SCRAP = False
-if Path(user_data_dir + user_docs_info_data_filename).exists() and not DO_SCRAP:
-    docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
-
-else:
+SCRAP_FROM_FILE
+if DO_SCRAP or not Path(user_data_dir + user_docs_info_data_filename).exists():
+    # 다음 부분에 카톡에서 URL/시간을 추출하거나 입력에서 
     input_df = utils.load_obj(user_data_dir, user_urls_data_filename)
 
     docs_info, docs_idx, error_urls_by_types = scraper(input_df['url'], input_df.index)  # .tolist()
@@ -59,12 +58,14 @@ else:
     docs_info_df.rename(columns = {"time": "clip_at"}, inplace=True)
     docs_info_df = docs_info_df.sort_values(by=['clip_at'], axis=0).reset_index(drop=True)  # 정렬 후 reset index
 
-    # print(docs_info_df)
-    # print(docs_info_df.isnull().sum())
-    # print(error_urls_by_types)
+    utils.save_obj(user_data_dir, user_docs_info_data_filename, docs_info_df)
+    utils.save_obj(user_data_dir, "error_urls_by_types.txt", error_urls_by_types)
 
-    # utils.save_obj(user_data_dir, user_docs_info_data_filename, docs_info_df)
-    # utils.save_obj(user_data_dir, "error_urls_by_types.txt", error_urls_by_types)
+else:
+    docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
+
+
+    
 
 
 #logger.info(docs_info_df)

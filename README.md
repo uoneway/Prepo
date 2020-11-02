@@ -1,4 +1,4 @@
-# plink
+# prepo
 웹페이지 scraping부터 이를 topic modeling까지 쉽게 하기 위한 프로젝트입니다.   
 Support 16 languages (Arabic, Chinese-simplified, Chinese-traditional, English, French, German, Italian, Japanese, Korean, Dutch, Polish, Portuguese, Spanish, Thai, Turkish, Russian) 
 
@@ -9,7 +9,7 @@ Support 16 languages (Arabic, Chinese-simplified, Chinese-traditional, English, 
 
 ## TopicModel 
 Topic modeling을 위한 class입니다.
-다음의 알고리즘을 사용하게 됩ㄴ디ㅏ.
+다음의 알고리즘을 사용하게 됩니다.
 1. Document/word enbedding: Doc2Vec DBOW 를 통해 docs와 word를 동일한 벡터공간에 표현
 2. Dimension reduction: UMAP
 3. Clustering: HDBSCAN
