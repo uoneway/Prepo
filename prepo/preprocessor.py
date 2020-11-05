@@ -9,7 +9,7 @@ from gensim.summarization.textcleaner import split_sentences
 logger = logging.getLogger(__name__)
 
 
-def number_splitter(sentence):
+def number_split(sentence):
     # 1. 공백 이후 숫자로 시작하는 경우만(문자+숫자+문자, 문자+숫자 케이스는 제외), 해당 숫자와 그 뒤 문자를 분리
     num_str_pattern = re.compile(r'(\s\d+)([^\d\s])')
     sentence = re.sub(num_str_pattern, r'\1 \2', sentence)
@@ -24,7 +24,7 @@ def number_splitter(sentence):
     return sentence_fixed
 
 
-def noise_remover(text):
+def noise_remove(text):
     text = text.lower()
     
     # url 대체
@@ -36,7 +36,7 @@ def noise_remover(text):
     text = soup.get_text(separator=" ")
 
     # 숫자 중간에 공백 삽입하기
-    text = number_splitter(text)
+    text = number_split(text)
     #number_pattern = re.compile('\w*\d\w*') 
 #     number_pattern = re.compile('\d+') 
 #     text = number_pattern.sub(r'[[NUMBER]]', text)
@@ -80,7 +80,7 @@ def korean_tokenizer(text, use_tags=None, print_tag=False):
 
 
 def preprocessing(text, tokenizer=korean_tokenizer):
-    text_p = noise_remover(text)
+    text_p = noise_remove(text)
     if tokenizer is not None:
         text_p = tokenizer(text_p)
         text_p = ' '.join(text_p)
@@ -88,7 +88,7 @@ def preprocessing(text, tokenizer=korean_tokenizer):
     return text_p
 
 
-def summarizer(text, word_count=256):
+def summarize(text, word_count=256):
     """
     gensim summarizer 이용
     https://github.com/anmolgulati/gensim/blob/df238ef1bc71568819ba92502f0e9df46b933698/gensim/summarization/summarizer.py

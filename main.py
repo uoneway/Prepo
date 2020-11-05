@@ -6,19 +6,21 @@ import pandas as pd
 import logging
 
 PROJECT_DIR = os.path.abspath(os.path.dirname("__file__")) #"/home/lab13/RunToLearn/plink/"
+print(PROJECT_DIR)
 # sys.path.insert(0, PROJECT_DIR + '/src')
 # sys.path.insert(1, PROJECT_DIR + '/submodules/Top2Vec')
 # sys.path.insert(1, PROJECT_DIR + '/submodules')
 #print(sys.path)
 
-from src import utils
-from src.scrap import scraper
-from src.preprocess import preprocessing, summarizer
+from prepo import utils
+from prepo.scraper import scrap
+from prepo.preprocessor import preprocessing, summarize
+from prepo.topic_model import TopicModel
 from submodules.Top2Vec.top2vec import Top2Vec
-from models.topic_model import TopicModel
+
 # import utils
 # from scrap import scraper
-# from preprocess import preprocessing, summarizer
+# from preprocessor import preprocessing, summarize
 # from top2vec import Top2Vec
 
 
@@ -40,17 +42,20 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ###############################################################################
 
 ## 데이터 가져오기/스크랩하기
-user_data_dir = TEST_DIR + "data/choi_urls/"
+user_data_dir = TEST_DIR + "datasets/choi_urls/"
 user_docs_info_data_filename = 'docs_info_df.pkl'
 user_urls_data_filename = 'choi_time_url_df.pkl'
 
-DO_SCRAP = False
-SCRAP_FROM_FILE
+sensitive_domain_cats=['ott', 'cloud']
+
+DO_SCRAP = True
+# SCRAP_FROM_FILE
 if DO_SCRAP or not Path(user_data_dir + user_docs_info_data_filename).exists():
     # 다음 부분에 카톡에서 URL/시간을 추출하거나 입력에서 
     input_df = utils.load_obj(user_data_dir, user_urls_data_filename)
 
-    docs_info, docs_idx, error_urls_by_types = scraper(input_df['url'], input_df.index)  # .tolist()
+
+    docs_info, docs_idx, no_scraped_urls_by_types = scrap(input_df['url'], input_df.index, sensitive_domain_cats=sensitive_domain_cats)  # .tolist()
     docs_info_df = pd.DataFrame.from_dict(docs_info)
     docs_info_df.index = docs_idx
 
@@ -59,17 +64,10 @@ if DO_SCRAP or not Path(user_data_dir + user_docs_info_data_filename).exists():
     docs_info_df = docs_info_df.sort_values(by=['clip_at'], axis=0).reset_index(drop=True)  # 정렬 후 reset index
 
     utils.save_obj(user_data_dir, user_docs_info_data_filename, docs_info_df)
-    utils.save_obj(user_data_dir, "error_urls_by_types.txt", error_urls_by_types)
+    utils.save_obj(user_data_dir, "no_scraped_urls_by_types.pkl", no_scraped_urls_by_types)
 
 else:
     docs_info_df = utils.load_obj(user_data_dir, user_docs_info_data_filename)
-
-
-    
-
-
-#logger.info(docs_info_df)
-#print(docs_info_df)
 
 
 ## 전처리 적용
@@ -83,11 +81,12 @@ else:
     docs_info_prep_df = docs_info_df.copy()
     docs_info_prep_df['contents_prep'] = docs_info_prep_df['title'] + ". " + docs_info_prep_df['contents']
     docs_info_prep_df['contents_prep'] = docs_info_prep_df['contents_prep'].apply(preprocessing)
-    docs_info_prep_df['contents_prep'] = docs_info_prep_df['contents_prep'].apply(summarizer)
+    docs_info_prep_df['contents_prep'] = docs_info_prep_df['contents_prep'].apply(summarize)
     utils.save_obj(user_data_dir, 'docs_info_prep_df.pkl', docs_info_prep_df)
 
 
 #### 추후 삭제
+docs_info_prep_df = utils.load_obj(user_data_dir, 'docs_info_prep_df.pkl')
 user_docs_df =  docs_info_prep_df.iloc[:-60, :]
 user_docs_post1_df = docs_info_prep_df.iloc[-60:-30, :]
 user_docs_post2_df = docs_info_prep_df.iloc[-30:, :]
@@ -101,7 +100,8 @@ tm_model = TopicModel(user_docs_df['contents_prep'], doc_ids=user_docs_df.index)
 topics_info = tm_model.get_topics_info()
 
 print(tm_model.get_topic_sizes())
-## topic reduction
+## topic reducpip list
+# tion
 topic_num_user_input = 10
 tm_model.reduce_topic(topic_num_user_input)
 topics_info = tm_model.get_topics_info()
