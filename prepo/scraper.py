@@ -107,7 +107,7 @@ def get_sensitive_domains(sensitive_domain_cats=None):
         "sns/community": ['facebook.com','instagram.com', 'twitter.com', 'dcinside.com','fmkorea.com','humoruniv.com',],
         'shopping': ['gmarket.co.kr','auction.co.kr','11st.co.kr','coupang.com','tmon.co.kr','interpark.com','ssg.com','wemakeprice.com','danawa.com','yes24.com','amazon.com','ebay.com','amazon.co.jp','amazon.co.uk','ppomppu.co.kr',],
         "ott": ['youtube.com','netflix.com','melon.com','afreecatv.com','pandora.tv','wavve.com','twitch.tv','gomtv.com','toptoon.com',],
-        "online_meeting ": ['zoom.us','meet.google.com',],
+        "online_meeting": ['zoom.us','meet.google.com',],
     }
     
     if sensitive_domains_dict is None:
