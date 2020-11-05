@@ -12,11 +12,11 @@ print(PROJECT_DIR)
 # sys.path.insert(1, PROJECT_DIR + '/submodules')
 #print(sys.path)
 
-from prepo import utils
-from prepo.scraper import scrap
-from prepo.preprocessor import preprocessing, summarize
-from prepo.topic_model import TopicModel
-from submodules.Top2Vec.top2vec import Top2Vec
+from prepo import utils  # pylint: disable=import-error
+from prepo.scraper import scrap  # pylint: disable=import-error
+from prepo.preprocessor import preprocessing, summarize  # pylint: disable=import-error
+from prepo.topic_model import TopicModel  # pylint: disable=import-error
+from submodules.Top2Vec.top2vec import Top2Vec  # pylint: disable=import-error
 
 # import utils
 # from scrap import scraper
