@@ -1,4 +1,4 @@
-from submodules.newspaper import newspaper  # from newspaper import Article, Config # https://newspaper.readthedocs.io/en/latest/   
+from newspaper import newspaper  # from newspaper import Article, Config # https://newspaper.readthedocs.io/en/latest/   
 from datetime import datetime
 from urllib.parse import urljoin, urlparse, parse_qs
 import re
@@ -13,6 +13,32 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+"""
+<Newspaper3k configuration options>
+keep_article_html, default False, “set to True if you want to preserve html of body text”
+http_success_only, default True, “set to False to capture non 2XX responses as well”
+MIN_WORD_COUNT, default 300, “num of word tokens in article text”
+MIN_SENT_COUNT, default 7, “num of sentence tokens”
+MAX_TITLE, default 200, “num of chars in article title”
+MAX_TEXT, default 100000, “num of chars in article text”
+MAX_KEYWORDS, default 35, “num of keywords in article”
+MAX_AUTHORS, default 10, “num of author names in article”
+MAX_SUMMARY, default 5000, “num of chars of the summary”
+MAX_SUMMARY_SENT, default 5, “num of sentences in summary”
+MAX_FILE_MEMO, default 20000, “python setup.py sdist bdist_wininst upload”
+memoize_articles, default True, “cache and save articles run after run”
+fetch_images, default True, “set this to false if you don’t care about getting images”
+follow_meta_refresh, default False, “follows a redirect url in a meta refresh html tag”
+image_dimension_ration, default 16/9.0, “max ratio for height/width, we ignore if greater”
+language, default ‘en’, “run newspaper.languages() to see available options.”
+browser_user_agent, default ‘newspaper/%s’ % __version__
+request_timeout, default 7
+number_threads, default 10, “number of threads when mthreading”
+verbose, default False, “turn this on when debugging”
+"""
+
+
+
 def scrap(urls, idx=None, sensitive_domain_cats=None):    
     docs_info = []
     docs_idx = []
@@ -26,9 +52,14 @@ def scrap(urls, idx=None, sensitive_domain_cats=None):
 
     sensitive_domains = get_sensitive_domains(sensitive_domain_cats)
 
-    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+    # Newspaper3k configuration 
     config = newspaper.Config()
-    config.browser_user_agent = user_agent
+    config.browser_user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+    # config.MIN_WORD_COUNT = 100
+    # config.memoize_articles = False
+    # config.fetch_images = False
+    # number_threads = 16  # 10
+    # verbose = True
 
     for i, url in tqdm(enumerate(urls), desc='scraper'):
         url = url_prefix_adder(url)

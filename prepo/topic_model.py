@@ -1,4 +1,4 @@
-from submodules.Top2Vec.top2vec import Top2Vec
+from Top2Vec.top2vec import Top2Vec
 import numpy as np
 import umap
 
