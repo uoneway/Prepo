@@ -168,7 +168,8 @@ class TopicModel(Top2Vec):
         for word, vectors in zip(total_topic_words, word_vectors_2d):
             words_idx_vector.append({'id': self.word2index[word],
                                     'x': vectors[0],
-                                    'y': vectors[1]
+                                    'y': vectors[1],
+                                    'word': word
             })
 
         return topics_idx_vector, docs_idx_vector, words_idx_vector
