@@ -46,29 +46,64 @@ class TopicModel(Top2Vec):
                         ) 
 
         self.topics_info = []
+        self.topics_info_reduced = []
         self.update_topics_info()
 
         
-    def get_topics_info(self):
-        return self.topics_info
+    def get_topics_info(self, is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
+
+        return self.topics_info_reduced if is_reduced \
+            else self.topics_info
+
+    def get_topic_info(self, topic_idx, is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
+
+        #super()._validate_topic_num(topic_idx, is_reduced)
+        topics_info = self.topics_info_reduced if is_reduced \
+            else self.topics_info
+
+        for topic_info in topics_info:
+            if topic_info['topic_idx'] == topic_idx:
+                return topic_info
+        print("Error")
+        return None
+
        
         
-    def update_topics_info(self):
-        topics_words, _, topic_indice = self.get_topics(reduced=True) if self.is_reduced \
+    def update_topics_info(self,is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
+        topics_words, _, topic_indice = self.get_topics(reduced=True) if is_reduced \
                                 else self.get_topics() 
-        topic_vectors = self.topic_vectors_reduced if self.is_reduced else\
+        topic_vectors = self.topic_vectors_reduced if is_reduced else\
                         self.topic_vectors
 
-        self.topics_info = []  # 초기화 
-        for topic_idx, topic_words, topic_vector in zip(topic_indice, topics_words, topic_vectors):
-            self.topics_info.append({'topic_idx': topic_idx,
-                                'topic_words': topic_words,
-                                'topic_vector': topic_vector,
-            })
+        # topics_info = self.topics_info_reduced if is_reduced \
+        #             else self.topics_info
+
+        if is_reduced:
+            self.topics_info_reduced = []  # 초기화 
+            for topic_idx, topic_words, topic_vector in zip(topic_indice, topics_words, topic_vectors):
+                self.topics_info_reduced.append({'topic_idx': topic_idx,
+                                    'topic_words': topic_words,
+                                    'topic_vector': topic_vector,
+                })
+        else:
+            self.topics_info = []  # 초기화 
+            for topic_idx, topic_words, topic_vector in zip(topic_indice, topics_words, topic_vectors):
+                self.topics_info.append({'topic_idx': topic_idx,
+                                    'topic_words': topic_words,
+                                    'topic_vector': topic_vector,
+                })
 
 
-    def get_doc_ids_by_topic(self, topic_idx):
-        if self.is_reduced:
+    def get_doc_ids_by_topic(self, topic_idx, is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
+        if is_reduced:
             num_docs = super().get_topic_sizes(reduced=True)[0][topic_idx]
             docs, doc_scores, doc_ids = super().search_documents_by_topic(topic_idx, num_docs, reduced=True)
         else:
@@ -125,7 +160,9 @@ class TopicModel(Top2Vec):
 
         return np.array(hot_words), np.array(hot_word_scores)
 
-    def get_2d_vectors(self):
+    def get_2d_vectors(self, is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
         # args for UMAP. Same as current args except n_components to plot graph
         umap_args_for_plot = self.umap_args.copy()
         umap_args_for_plot.update({'n_components': 2,})
@@ -155,7 +192,7 @@ class TopicModel(Top2Vec):
         
         docs_idx_vector = []
         document_ids = self.document_ids
-        topic_indice, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if self.is_reduced \
+        topic_indice, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
                      else super().get_documents_topics(document_ids)
         for doc_id, vectors, topic_idx in zip(document_ids, document_vectors_2d, topic_indice):
             #doc_id = super()._get_document_ids(idx)
