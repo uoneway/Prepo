@@ -22,7 +22,7 @@ class TopicModel(Top2Vec):
         # https://tfhub.dev/google/universal-sentence-encoder-multilingual/3
         # 16 languages (Arabic, Chinese-simplified, Chinese-traditional, English, French, German, Italian, Japanese, Korean, Dutch, Polish, Portuguese, Spanish, Thai, Turkish, Russian) 
         
-        self.umap_args = {'n_neighbors': 3,
+        self.umap_args = {'n_neighbors': 5,
                         'n_components': 5,
                         'metric': 'cosine'
                         } if umap_args is None else umap_args
@@ -45,9 +45,13 @@ class TopicModel(Top2Vec):
                         hdbscan_args=self.hdbscan_args,
                         ) 
 
-        self.topics_info = []
-        self.topics_info_reduced = []
-        self.update_topics_info()
+        # {'topic_idxes': [topic1_idx, topic2_idx,..]
+        # 'topics_words': [topic_words of topic1,]   word도 리스트
+        # 'topic_vectors': [topic_vector,]}  vector도 리스트
+        self.topics_info = {}
+        self.topics_info_reduced = {}
+
+        self._update_topics_info()
 
         
     def get_topics_info(self, is_reduced=None):
@@ -57,47 +61,55 @@ class TopicModel(Top2Vec):
         return self.topics_info_reduced if is_reduced \
             else self.topics_info
 
-    def get_topic_info(self, topic_idx, is_reduced=None):
-        if is_reduced is None:
-            is_reduced = self.is_reduced
+    def get_topics_info_as_dict_list(self, is_reduced=None):
+        # [{'topic_idx': idx,
+        # 'topic_words': [word1, word2 ...]
+        # 'topic_vector': [vector1,vector2 ...]} ] 
 
-        #super()._validate_topic_num(topic_idx, is_reduced)
-        topics_info = self.topics_info_reduced if is_reduced \
-            else self.topics_info
+        topics_info = self.get_topics_info(is_reduced)
 
-        for topic_info in topics_info:
-            if topic_info['topic_idx'] == topic_idx:
-                return topic_info
-        print("Error")
-        return None
-
-       
+        #list dict to dict list
+        key_names = ['topic_idx', 'topic_words', 'topic_vector']
+        topics_info_dict_list = [dict(zip(key_names, t)) for t in zip(*topics_info.values())]
         
-    def update_topics_info(self,is_reduced=None):
+        return topics_info_dict_list
+
+    def get_topic_info(self, topic_idx, is_reduced=None):
+        #{'topic_idx': idx,
+        # 'topic_words': [word1, word2 ...]
+        # 'topic_vector': [vector1,vector2 ...]}
+        
         if is_reduced is None:
             is_reduced = self.is_reduced
-        topics_words, _, topic_indice = self.get_topics(reduced=True) if is_reduced \
-                                else self.get_topics() 
-        topic_vectors = self.topic_vectors_reduced if is_reduced else\
-                        self.topic_vectors
+        #super()._validate_topic_num(topic_idx, is_reduced)
 
-        # topics_info = self.topics_info_reduced if is_reduced \
-        #             else self.topics_info
+        topics_info_dict_list = self.get_topics_info_as_dict_list(is_reduced)
+        topics_info_dict = topics_info_dict_list[topic_idx]
 
-        if is_reduced:
-            self.topics_info_reduced = []  # 초기화 
-            for topic_idx, topic_words, topic_vector in zip(topic_indice, topics_words, topic_vectors):
-                self.topics_info_reduced.append({'topic_idx': topic_idx,
-                                    'topic_words': topic_words,
-                                    'topic_vector': topic_vector,
-                })
-        else:
-            self.topics_info = []  # 초기화 
-            for topic_idx, topic_words, topic_vector in zip(topic_indice, topics_words, topic_vectors):
-                self.topics_info.append({'topic_idx': topic_idx,
-                                    'topic_words': topic_words,
-                                    'topic_vector': topic_vector,
-                })
+        assert topics_info_dict_list[topic_idx]['topic_idx'] == topic_idx
+
+        return topics_info_dict
+        
+    def _update_topics_info(self):
+
+        # for not reduced
+        topics_words, _, topic_idxes = self.get_topics()
+        self.topics_info = {'topic_idxes': topic_idxes,
+                            'topics_words': topics_words,
+                            'topic_vectors': self.topic_vectors}
+        # for reduced:
+        if self.is_reduced:
+            topics_words_reduced, _, topic_idxes_reduced = self.get_topics(reduced=True)       
+            self.topics_info_reduced = {'topic_idxes': topic_idxes_reduced,
+                                'topics_words': topics_words_reduced,
+                                'topic_vectors': self.topic_vectors_reduced}
+
+    def reduce_topic(self, num_topics):
+        # 줄이고 싶다면 이 함수를 무조건 호출해줘야함 
+        clusters_reduced_indice_list = self.hierarchical_topic_reduction(num_topics)
+        self.is_reduced = True
+
+        self._update_topics_info()
 
 
     def get_doc_ids_by_topic(self, topic_idx, is_reduced=None):
@@ -170,26 +182,19 @@ class TopicModel(Top2Vec):
         # Dimension reduction
         umap_model = umap.UMAP(**umap_args_for_plot, random_state=42).fit(super()._get_document_vectors())  #  + self.topic_words
         document_vectors_2d = umap_model.embedding_  # same as umap_model.transform(self._get_document_vectors())
+        
+        topics_info = self.get_topics_info(is_reduced)
 
         #topics
-        total_topic_words = set()
-        topic_vectors = []
-        topic_idx = []
-        for info in self.get_topics_info():
-            topic_idx.append(info['topic_idx'])
-            total_topic_words.update(info['topic_words'])
-            topic_vectors.append(info['topic_vector'])
-        topic_vectors_2d = umap_model.transform(topic_vectors)
-        word_vectors_2d = umap_model.transform(super()._get_word_vectors(total_topic_words))
-        # super().document_id
-        # 
+        topic_vectors_2d = umap_model.transform(topics_info['topic_vectors'])
         topics_idx_vector = []
-        for idx, vectors in zip(topic_idx, topic_vectors_2d):
+        for idx, vectors in zip(topics_info['topic_idxes'], topic_vectors_2d):
             topics_idx_vector.append({'id': idx,
                                     'x': vectors[0],
                                     'y': vectors[1]
             })
         
+        # docs
         docs_idx_vector = []
         document_ids = self.document_ids
         topic_indice, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
@@ -201,7 +206,10 @@ class TopicModel(Top2Vec):
                                     'y': vectors[1],
                                     'topic_idx': topic_idx,
             })
+
         words_idx_vector = []
+        total_topic_words = set(word for words in topics_info['topics_words'] for word in words)
+        word_vectors_2d = umap_model.transform(super()._get_word_vectors(total_topic_words))
         for word, vectors in zip(total_topic_words, word_vectors_2d):
             words_idx_vector.append({'id': self.word2index[word],
                                     'x': vectors[0],
@@ -211,35 +219,38 @@ class TopicModel(Top2Vec):
 
         return topics_idx_vector, docs_idx_vector, words_idx_vector
 
+    def get_nodes_info(self, is_reduced=None):
+        pass
+        # if is_reduced is None:
+        #     is_reduced = self.is_reduced
+        
+        
+            
 
-    def reduce_topic(self, num_topics):
-        # 줄이고 싶다면 이 함수를 무조건 호출해줘야함 
-        clusters_reduced_indice_list = self.hierarchical_topic_reduction(num_topics)
-        self.is_reduced = True
+        # topics_node_info = []
+        # for idx, vectors in zip(topics_index, topic_vectors_2d):
+        #     topics_node_info.append({'id': idx,
 
-        self.update_topics_info()
+        #     })
+        
+        # docs_idx_vector = []
+        # document_ids = self.document_ids
+        # docs_topic_index, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
+        #              else super().get_documents_topics(document_ids)
+        # for doc_id, vectors, doc_topic_index in zip(document_ids, document_vectors_2d, docs_topic_index):
+        #     #doc_id = super()._get_document_ids(idx)
+        #     docs_idx_vector.append({'id': doc_id,
+        #                             'x': vectors[0],
+        #                             'y': vectors[1],
+        #                             'topic_idx': doc_topic_index,
+        #     })
+        # words_idx_vector = []
+        # for word, vectors in zip(total_topic_words, word_vectors_2d):
+        #     words_idx_vector.append({'id': self.word2index[word],
+        #                             'x': vectors[0],
+        #                             'y': vectors[1],
+        #                             'word': word
+        #     })
 
-        # for doc_id, cluster_idx in self.doc_to_cluster.items():
-        #     self.doc_to_cluster[doc_id]['cluster_reduced']= self.get_reduced_cluster_idx(cluster_idx, clusters_reduced_indice_list)
+        # return topics_node_info, docs_idx_vector, words_idx_vector
 
-
-
-    ## topic, docs, keyword, 
-    # topic -> docs
-    # def search_documents_by_topic(self, topic_num, num_docs, return_documents=True, reduced=False):
-    # topic -> keyword
-    # def get_topics(self, num_topics=None, reduced=False):
-    # return self.topic_words[0:num_topics], self.topic_word_scores[0:num_topics], np.array(range(0, num_topics))
-
-    # keywords -> doc
-    # def search_documents_by_keywords(self, keywords, num_docs, keywords_neg=None, return_documents=True):
-    # keywords -> keywords
-    # def similar_words(self, keywords, num_words, keywords_neg=None):
-    # keywords -> topic
-    # def search_topics(self, keywords, num_topics, keywords_neg=None, reduced=False):
-
-    # docs -> topics
-    # get_documents_topics(self, doc_ids, reduced=False)
-    # docs -> keyword
-    # docs -> docs
-    #  def search_documents_by_documents(self, doc_ids, num_docs, doc_ids_neg=None, return_documents=True):
