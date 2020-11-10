@@ -238,6 +238,6 @@ class TopicModel(Top2Vec):
 
         # doc-word
         docs_words, _ = self.get_keywords_by_doc(document_ids, doc_ids_neg=None,)
-        links += [('doc_' + str(doc_id), 'word_' + str(self.word2index[word])) for doc_id, words in zip(document_ids, docs_words) for word in words]
+        links += [('doc_' + str(doc_id), 'word_' + str(self.word2index[word])) for doc_id, words in zip(document_ids, docs_words) for word in words[:word_num]]
         
         return links
