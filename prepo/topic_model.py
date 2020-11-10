@@ -219,7 +219,7 @@ class TopicModel(Top2Vec):
 
         return topics_idx_vector, docs_idx_vector, words_idx_vector
 
-    def get_links_info(self, is_reduced=None):
+    def get_links_info(self, word_num=10, is_reduced=None):
         if is_reduced is None:
             is_reduced = self.is_reduced
 
@@ -234,7 +234,7 @@ class TopicModel(Top2Vec):
 
         # topic-word
         topics_words = self.get_topics_info(is_reduced=is_reduced)['topics_words']
-        links += [('word_' + str(self.word2index[word]), 'topic_' + str(topic_idx)) for topic_idx, words in enumerate(topics_words) for word in words]
+        links += [('word_' + str(self.word2index[word]), 'topic_' + str(topic_idx)) for topic_idx, words in enumerate(topics_words) for word in words[:word_num]]
 
         # doc-word
         docs_words, _ = self.get_keywords_by_doc(document_ids, doc_ids_neg=None,)
