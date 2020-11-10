@@ -219,38 +219,25 @@ class TopicModel(Top2Vec):
 
         return topics_idx_vector, docs_idx_vector, words_idx_vector
 
-    def get_nodes_info(self, is_reduced=None):
-        pass
-        # if is_reduced is None:
-        #     is_reduced = self.is_reduced
+    def get_links_info(self, is_reduced=None):
+        if is_reduced is None:
+            is_reduced = self.is_reduced
+
+        links = []
+
+        #doc-topic
+        document_ids = self.document_ids
+        topic_indexes, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
+                     else super().get_documents_topics(document_ids)
+
+        links += [('doc_' + str(doc_id), 'topic_' + str(topic_idx)) for doc_id, topic_idx in zip(document_ids, topic_indexes)]
+
+        # topic-word
+        topics_words = self.get_topics_info(is_reduced=is_reduced)['topics_words']
+        links += [('word_' + str(self.word2index[word]), 'topic_' + str(topic_idx)) for topic_idx, words in enumerate(topics_words) for word in words]
+
+        # doc-word
+        docs_words, _ = self.get_keywords_by_doc(document_ids, doc_ids_neg=None,)
+        links += [('doc_' + str(doc_id), 'word_' + str(self.word2index[word])) for doc_id, words in zip(document_ids, docs_words) for word in words]
         
-        
-            
-
-        # topics_node_info = []
-        # for idx, vectors in zip(topics_index, topic_vectors_2d):
-        #     topics_node_info.append({'id': idx,
-
-        #     })
-        
-        # docs_idx_vector = []
-        # document_ids = self.document_ids
-        # docs_topic_index, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
-        #              else super().get_documents_topics(document_ids)
-        # for doc_id, vectors, doc_topic_index in zip(document_ids, document_vectors_2d, docs_topic_index):
-        #     #doc_id = super()._get_document_ids(idx)
-        #     docs_idx_vector.append({'id': doc_id,
-        #                             'x': vectors[0],
-        #                             'y': vectors[1],
-        #                             'topic_idx': doc_topic_index,
-        #     })
-        # words_idx_vector = []
-        # for word, vectors in zip(total_topic_words, word_vectors_2d):
-        #     words_idx_vector.append({'id': self.word2index[word],
-        #                             'x': vectors[0],
-        #                             'y': vectors[1],
-        #                             'word': word
-        #     })
-
-        # return topics_node_info, docs_idx_vector, words_idx_vector
-
+        return links
