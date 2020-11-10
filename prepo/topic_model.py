@@ -130,7 +130,8 @@ class TopicModel(Top2Vec):
         return doc_ids
 
 
-    def get_keywords_by_doc(self, doc_ids, doc_ids_neg=None,):
+    def get_keywords_by_docs(self, doc_ids, doc_ids_neg=None,):
+        #리턴이 리스트의 리스트임!
     
         # (self, doc_ids, num_words, doc_ids_neg=None,):
         if doc_ids_neg is None:
@@ -139,17 +140,17 @@ class TopicModel(Top2Vec):
         self._validate_doc_ids(doc_ids, doc_ids_neg)
 
         doc_indexes = self._get_document_indexes(doc_ids)
-        doc_indexes_neg = self._get_document_indexes(doc_ids_neg)
+        # doc_indexes_neg = self._get_document_indexes(doc_ids_neg)
 
         doc_vecs = [self.document_vectors[ind] for ind in doc_indexes]
-        doc_vecs_neg = [self.document_vectors[ind] for ind in doc_indexes_neg]
-        combined_vector = self._get_combined_vec(doc_vecs, doc_vecs_neg)
+        # doc_vecs_neg = [self.document_vectors[ind] for ind in doc_indexes_neg]
+        # combined_vector = self._get_combined_vec(doc_vecs, doc_vecs_neg)
 
         # 이름은 topic word 찾는거지만, 벡터받아서 가까운 50개 단어 추출해줌
-        combined_vector = np.expand_dims(combined_vector, axis=0)  # 1d라서 2d로 바꿔주기
-        words, word_scores = super()._find_topic_words_and_scores(combined_vector)
+        # combined_vector = np.expand_dims(combined_vector, axis=0)  # 1d라서 2d로 바꿔주기
+        docs_words, docs_word_scores = super()._find_topic_words_and_scores(doc_vecs)
 
-        return words, word_scores
+        return docs_words, docs_word_scores
 
     def get_hot_keywords_by_docs(self, doc_ids, doc_weights, doc_ids_neg=None, num_words=10):
         words, word_scores = self.get_keywords_by_doc(doc_ids, doc_ids_neg=doc_ids_neg,)
@@ -225,19 +226,23 @@ class TopicModel(Top2Vec):
 
         links = []
 
-        #doc-topic
+        
         document_ids = self.document_ids
         topic_indexes, _, _, _ = super().get_documents_topics(document_ids, reduced=True) if is_reduced \
                      else super().get_documents_topics(document_ids)
 
+        #doc -> topic
         links += [('doc_' + str(doc_id), 'topic_' + str(topic_idx)) for doc_id, topic_idx in zip(document_ids, topic_indexes)]
+
 
         # topic-word
         topics_words = self.get_topics_info(is_reduced=is_reduced)['topics_words']
         links += [('word_' + str(self.word2index[word]), 'topic_' + str(topic_idx)) for topic_idx, words in enumerate(topics_words) for word in words[:word_num]]
 
         # doc-word
-        docs_words, _ = self.get_keywords_by_doc(document_ids, doc_ids_neg=None,)
-        links += [('doc_' + str(doc_id), 'word_' + str(self.word2index[word])) for doc_id, words in zip(document_ids, docs_words) for word in words[:word_num]]
+        #print(self.get_keywords_by_docs([document_ids[0]])[0])
+        docs_words, _ = self.get_keywords_by_docs(document_ids)
+        print(docs_words)
+        links += [('doc_' + str(doc_id), 'word_' + str(self.word2index[word])) for doc_id, words in zip(document_ids, docs_words) for word in words]
         
         return links
