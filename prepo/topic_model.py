@@ -234,7 +234,6 @@ class TopicModel(Top2Vec):
         #doc -> topic
         links += [('doc_' + str(doc_id), 'topic_' + str(topic_idx)) for doc_id, topic_idx in zip(document_ids, topic_indexes)]
 
-
         # topic-word
         topics_words = self.get_topics_info(is_reduced=is_reduced)['topics_words']
         links += [('word_' + str(self.word2index[word]), 'topic_' + str(topic_idx)) for topic_idx, words in enumerate(topics_words) for word in words[:word_num]]
